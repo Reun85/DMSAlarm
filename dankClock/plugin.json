@@ -1,0 +1,19 @@
+{
+    "$schema": "https://github.com/AvengeMedia/DankMaterialShell/raw/refs/heads/master/PLUGINS/plugin-schema.json",
+    "id": "dankClock",
+    "name": "Dank Clock",
+    "description": "Pomodoro, countdown timers, stopwatch and alarms in one bar widget",
+    "version": "0.1.0",
+    "author": "Reun",
+    "type": "composite",
+    "capabilities": ["daemon", "dankbar-widget", "control-center"],
+    "icon": "timer",
+    "components": {
+        "daemon": "./ClockDaemon.qml",
+        "widget": "./ClockBarWidget.qml"
+    },
+    "settings": "./ClockSettings.qml",
+    "startupCheck": "./StartupCheck.qml",
+    "requires_dms": ">=1.5.0",
+    "permissions": ["settings_read", "settings_write", "process"]
+}
