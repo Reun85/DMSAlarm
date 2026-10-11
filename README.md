@@ -66,7 +66,7 @@ inputs.dank-clock = {
 { inputs, ... }: {
   imports = [ inputs.dank-clock.homeManagerModules.default ];
 
-  programs.dankClock = {
+  programs.dank-material-shell.plugins.dankClock = {
     enable = true;
     # Optional; every key and default is in dankClock/Config.js.
     settings = {
@@ -82,10 +82,12 @@ inputs.dank-clock = {
 }
 ```
 
-The module sets `programs.dank-material-shell.plugins.dankClock` (`enable`, `src`,
-`settings`) and adds `pipewire` for `pw-play`; turn that off with
-`installSoundDeps = false`. The flake also exports `packages.<system>.default`
-(the plugin directory itself) if you would rather wire `src` up yourself.
+Like `dms-plugin-registry`, the module only registers the plugin: it fills in
+`src` and leaves `enable` defaulting to `false`. It works with whichever DMS
+module you import (`programs.dank-material-shell`, `programs.dankMaterialShell`
+or `programs.dms-shell`). Enabling the plugin also adds `pipewire` for
+`pw-play`. The flake also exports `packages.<system>.default` (the plugin
+directory itself) if you would rather set `src` yourself.
 `nix flake check` runs the logic fixtures.
 
 ## Settings vs. what you change in the popout
@@ -97,7 +99,7 @@ history — in DMS **plugin state**
 (`~/.local/state/DankMaterialShell/plugins/dankClock_state.json`), which is
 writable.
 
-Plugin settings, from the settings page or `programs.dankClock.settings`, are the
+Plugin settings, from the settings page or `plugins.dankClock.settings`, are the
 **defaults** underneath. A popout edit wins over them. The ↺ button on the
 pomodoro's *Adjust* card drops those edits so the configured values apply again.
 

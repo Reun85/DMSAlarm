@@ -32,65 +32,43 @@
         '';
       });
 
+      # Registers the plugin with the DMS module the way dms-plugin-registry
+      # does: `src` is filled in and `enable` defaults to false, so a user only
+      # writes `programs.dank-material-shell.plugins.dankClock.enable = true`.
       homeManagerModules.default = self.homeManagerModules.dankClock;
       homeManagerModules.dankClock =
         {
           config,
           lib,
           pkgs,
+          options,
           ...
         }:
         let
-          cfg = config.programs.dankClock;
+          plugin = {
+            enable = lib.mkDefault false;
+            src = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+          };
+
+          # The stable flake, the unstable flake and nixpkgs each name the
+          # module differently; register under whichever one is imported.
+          names = builtins.filter (n: options ? programs.${n}.plugins) [
+            "dankMaterialShell"
+            "dank-material-shell"
+            "dms-shell"
+          ];
+
+          enabled = lib.any (n: config.programs.${n}.plugins.dankClock.enable) names;
         in
         {
-          options.programs.dankClock = {
-            enable = lib.mkEnableOption "the dankClock DankMaterialShell plugin";
-
-            package = lib.mkOption {
-              type = lib.types.package;
-              default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
-              defaultText = lib.literalExpression "inputs.dank-clock.packages.\${system}.default";
-              description = "The plugin directory to install.";
-            };
-
-            settings = lib.mkOption {
-              type = lib.types.attrsOf (
-                lib.types.oneOf [
-                  lib.types.bool
-                  lib.types.int
-                  lib.types.str
-                ]
-              );
-              default = { };
-              example = {
-                workMin = 50;
-                shortBreakMin = 10;
-                soundFile = "bell";
-              };
-              description = ''
-                Plugin settings; see dankClock/Config.js for every key and its
-                default. These are defaults only: values edited in the popout
-                are kept in plugin state and take precedence.
-              '';
-            };
-
-            installSoundDeps = lib.mkOption {
-              type = lib.types.bool;
-              default = true;
-              description = "Add pw-play (pipewire) to home.packages. The default sounds are bundled with the plugin.";
-            };
-          };
-
-          config = lib.mkIf cfg.enable {
-            programs.dank-material-shell.plugins.dankClock = {
-              enable = true;
-              src = cfg.package;
-              settings = cfg.settings;
-            };
-
-            home.packages = lib.mkIf cfg.installSoundDeps [ pkgs.pipewire ];
-          };
+          config = lib.mkMerge (
+            map (n: { programs.${n}.plugins.dankClock = plugin; }) names
+            ++ [
+              # pw-play, used by scripts/ck-sound.sh. The default sounds are
+              # bundled with the plugin.
+              { home.packages = lib.mkIf enabled [ pkgs.pipewire ]; }
+            ]
+          );
         };
     };
 }
